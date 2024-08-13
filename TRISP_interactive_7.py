@@ -7,6 +7,8 @@ import warnings
 from matplotlib import MatplotlibDeprecationWarning
 from scipy.optimize import curve_fit
 
+st.set_page_config(layout="wide")
+
 # Data upload
 datasets = {
     'V1': {

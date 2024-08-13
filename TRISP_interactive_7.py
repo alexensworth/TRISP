@@ -71,11 +71,20 @@ trs = [tr_mapping[tr] for tr in datasets['V1'].keys()]
 def page_intro():
     st.markdown("""
                 # An investigation of repetition time on MR spectroscopy """)
+    st.markdown("""## Purpose:""")
+    st.markdown("""### This study aims to determine the optimal balance ebtween scan time and repetition time that minimizes T1 weighting effects.""")
+    st.markdown("""## Parameters:""")
+    st.markdown(""" - 5 healthy controls (mean age 25 $\pm$ 2 years)""")
+    st.markdown(""" - 3 T Philips Ingenia Elition X""")
+    st.markdown(""" - semi-LASER localization""")
+    st.markdown(""" - 30 x 20 x 13 mm$^3$ voxel in the posterior cingulate cortex (PCC)""")
     st.markdown("""
                 This document reflects the data taken in this study. 
                 Each page reflects various aspects of analysis conducted in this study.  """)
-    st.markdown("""Navigate through the pages via the menu on the left side of this screen for different anaylses of this data.""")
-    st.markdown("""Upon selecting a page, the default selection of data is what is presented in the manuscript, however you can modify these selections by selecting different items in the drop down menus.""")
+    st.markdown("""## How to use this tool:""")
+    st.markdown(""" - Navigate to various analysis pages via the menu on the left""")
+    st.markdown(""" - Upon selecting a page, the default selection of data is what is presented in the manuscript""")
+    st.markdown(""" - Modify the selections by choosing different items in the drop down menus.""")
     
 
 def vol_dat():

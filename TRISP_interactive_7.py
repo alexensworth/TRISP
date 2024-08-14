@@ -1048,7 +1048,7 @@ def page_FWHM():
 ############################ T1 fit content ###########################
 def page_T1_fit():
     st.header("T$_1$ Fitting")
-    st.markdown("""#### Using our TR data to determine the T1 relaxation times for metabolites via saturation recovery.""")
+    st.markdown("""#### Using our TR data to determine the T$_1$ relaxation times for metabolites via saturation recovery.""")
 
     # Fit function
     def sat_rec(TR, M0, T1):
@@ -1212,7 +1212,7 @@ pages = {
     "Concentration": page_concentration,
     "CRLB": page_CRLB,
     "FWHM": page_FWHM,
-    "T1 Fits": page_T1_fit,
+    "T$_1$ Fits": page_T1_fit,
 
 }
 

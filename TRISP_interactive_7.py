@@ -1212,7 +1212,7 @@ pages = {
     "Concentration": page_concentration,
     "CRLB": page_CRLB,
     "FWHM": page_FWHM,
-    "T$_1$ Fits": page_T1_fit,
+    "T1 Fits": page_T1_fit,
 
 }
 

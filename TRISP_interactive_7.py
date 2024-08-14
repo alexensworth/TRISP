@@ -9,6 +9,8 @@ from scipy.optimize import curve_fit
 
 st.set_page_config(layout="wide")
 
+
+
 # Data upload
 datasets = {
     'V1': {
@@ -72,10 +74,10 @@ trs = [tr_mapping[tr] for tr in datasets['V1'].keys()]
 ############################ Introduction ###########################
 def page_intro():
     st.markdown("""
-                # An investigation of repetition time on MR spectroscopy """)
+                # An Investigation of Repetition Time on MR Spectroscopy """)
     st.markdown("""## Purpose:""")
-    st.markdown("""#### This study aims to determine the optimal balance ebtween scan time and repetition time that minimizes T1 weighting effects.""")
-    st.markdown("""## Parameters:""")
+    st.markdown("""#### This study aims to determine the optimal balance between scan time and repetition time that minimizes T$_1$ weighting effects.""")
+    st.markdown("""## Study details:""")
     st.markdown(""" - 5 healthy controls (mean age 25 $\pm$ 2 years)""")
     st.markdown(""" - 3 T Philips Ingenia Elition X""")
     st.markdown(""" - semi-LASER localization""")
@@ -85,7 +87,7 @@ def page_intro():
     st.markdown(""" - Each page reflects various aspects of analysis conducted in this study""")
     st.markdown(""" - Navigate to various analysis pages via the menu on the left""")
     st.markdown(""" - Upon selecting a page, the default selection of data is what is presented in the manuscript""")
-    st.markdown(""" - Modify the selections by choosing different items in the drop down menus.""")
+    st.markdown(""" - Modify the selections by choosing different items in the drop down menus, such as choice of metabolite, or number of volunteers included in plot.""")
     
 
 def vol_dat():
@@ -1045,7 +1047,7 @@ def page_FWHM():
 
 ############################ T1 fit content ###########################
 def page_T1_fit():
-    st.header("T1 Fitting")
+    st.header("T$_1$ Fitting")
     st.markdown("""#### Using our TR data to determine the T1 relaxation times for metabolites via saturation recovery.""")
 
     # Fit function

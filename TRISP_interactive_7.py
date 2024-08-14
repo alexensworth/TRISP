@@ -87,7 +87,7 @@ def page_intro():
     st.markdown(""" - Each page reflects various aspects of analysis conducted in this study""")
     st.markdown(""" - Navigate to various analysis pages via the menu on the left""")
     st.markdown(""" - Upon selecting a page, the default selection of data is what is presented in the manuscript""")
-    st.markdown(""" - Modify the selections by choosing different items in the drop down menus, such as choice of metabolite, or number of volunteers included in plot.""")
+    st.markdown(""" - Modify the selections by choosing different items in the drop down menus, such as choice of metabolite, or number of volunteers included in the plot.""")
     
 
 def vol_dat():

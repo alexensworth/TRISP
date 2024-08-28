@@ -1,0 +1,22 @@
+date
+echo ">>We need to convert the Philips spectroscopy data to NIfTI format."
+spec2nii philips scanner_data/metabolite_data.SDAT scanner_data/metabolite_data.SPAR -t DIM_DYN
+spec2nii philips scanner_data/water_data.SDAT scanner_data/water_data.SPAR -t DIM_DYN
+mkdir all_analysis
+mv metabolite_data.nii.gz all_analysis
+mv water_data.nii.gz all_analysis
+echo ">>Philips data converted to NIfTI"
+echo " "
+echo ">>Zero pad the data."
+fsl_mrs_proc truncate --file all_analysis/metabolite_data.nii.gz --points 2048  -r --filename metab_pad --output all_analysis/padded
+fsl_mrs_proc truncate --file all_analysis/water_data.nii.gz --points 2048 --filename wref_pad --output all_analysis/padded
+echo ">>Data has been zero padded"
+echo " "
+echo "Processing steps:"
+fsl_mrs_preproc --data all_analysis/padded/metab_pad.nii.gz --reference all_analysis/padded/wref_pad.nii.gz --output all_analysis/processed_pad --hlsvd --overwrite --report --align_limits 4.5 4.8
+echo "Done."
+echo " "
+echo "Fitting"
+fsl_mrs --data all_analysis/processed_pad/metab.nii.gz --basis ../general_data/TRISP_basis_Aug2023 --t1 ../general_data/3D_T1_NIFTI/3D_T1.nii --tissue_frac ../general_data/Tissue_Frac_segmentation.json --output all_analysis/fit_pad --overwrite --h2o all_analysis/processed_pad/wref.nii.gz --ppmlim 0.2 4.0 --metab_groups MM09 MM12 MM14 MM16 MM21 MM30 MM39 --report
+echo "Done."
+date

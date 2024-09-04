@@ -1292,7 +1292,8 @@ def page_T1_fit():
     st.pyplot(fig)
 
     st.markdown("""## Many metabolite T$_1$ comparison""")
-
+    st.markdown("""### Select your choice of metabolites:""")
+    
     # Let the user select multiple metabolites
     selected_metabolites = st.multiselect('Select metabolites:', metabolites, default=['NAA','GPC+PCh','Cr+PCr','mI','Glu'])
 

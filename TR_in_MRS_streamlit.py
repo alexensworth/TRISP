@@ -1282,8 +1282,8 @@ def page_T1_fit():
         plt.scatter(TRs, combined_y_values, s=100, color=colors[i], alpha=0.7, marker=markers[i])
         plt.plot(TR_fit, sat_rec(TR_fit, *p_opt), color=colors[i], linewidth=5, alpha=0.3, label=f'Fit for {v}')
 
-    plt.xlabel('TR [s]', fontsize=20)
-    plt.ylabel('Apparent Conc. [mM]', fontsize=20)
+    plt.xlabel('TR (s)', fontsize=20)
+    plt.ylabel('Apparent Conc. (mM)', fontsize=20)
     plt.title(f'T$_1$ fits for {label_map.get(selected_metabolite, selected_metabolite)}', fontsize=30)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)

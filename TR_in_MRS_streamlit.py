@@ -1195,7 +1195,7 @@ def page_T1_fit():
 
 
     st.markdown("""## Single metabolite fit""")
-    st.markdown("""### Select the volunteer and metabolite of your choice:""")
+    st.markdown("""### Select a metabolite of your choice:""")
 
     # Fit function
     def sat_rec(TR, M0, T1):

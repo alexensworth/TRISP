@@ -49,7 +49,7 @@ datasets = {
     },
 }
 
-# Define a mapping from current TR labels to desired labels
+# Define a map for TR labels as they are in the spreadsheet to what you want them to be displayed as
 tr_mapping = {
     'TR2_128': 'TR=2s, 128acqs',
     'TR2_064': 'TR=2s, 64acqs',
@@ -77,7 +77,6 @@ def page_intro():
     st.markdown("""- Upon selecting a page, the default selection of data is what is presented in the manuscript.""")
     st.markdown("""- Modify the selections by choosing different items in the drop-down menus, such as the choice of metabolite or the number of volunteers included in the plot.""")
 
-    
 ######################## Data representation ########################
 def vol_dat():
     st.header("MRS Data Representation")
@@ -91,14 +90,13 @@ def vol_dat():
     
     #Creates list of volunteers
     vols= list(datasets.keys())
-    #Creates list of TRs
-    #trs = list(datasets['V1'].keys())
 
-    # Create a select box for the datasets
+    # Create a select box of volunteers for the user 
     selected_V_spec = st.selectbox('Select a volunteer:', vols, key='spec_v')
     selected_tr_label = st.selectbox('Select a TR:', trs)
     selected_tr = list(tr_mapping.keys())[list(tr_mapping.values()).index(selected_tr_label)]
 
+    # Define the location of the spectra - these names must take the form: volunteer_TR.png
     image_path = f'Interactive_TRISP_data/figs/{selected_V_spec}_{selected_tr}.png'
 
     st.markdown(f"""### Spectrum with fit for volunteer {selected_V_spec}, {selected_tr_label}""")
@@ -110,11 +108,11 @@ def vol_dat():
     selected_dataset = datasets[selected_V_spec][selected_tr]
     Cols_to_display = ['Metab','SNR','mM','mM CRLB', 'FWHM'];
     selected_dataset=selected_dataset[Cols_to_display]
-    #rows_to_drop = []
+    # We can specify which rows we don't want to include - here I'm omitting the macromolecules
     rows_to_drop = [11, 12, 13, 14, 15, 16, 17]
     selected_dataset = selected_dataset.drop(rows_to_drop)
     selected_dataset=selected_dataset.T
-    # Format numeric values to 4 decimal places
+    # Format all numeric values in the table to be 4 decimal places
     selected_dataset = selected_dataset.map(lambda x: '{:.4f}'.format(x) if isinstance(x, (int, float)) else x)
 
     st.dataframe(selected_dataset)
@@ -133,7 +131,7 @@ def page_snr():
 
     st.markdown("""### Select the volunteer and metabolite of your choice:""")
                 
-    # Assuming the first column contains the metabolite names for all sets of data
+    # Get a list of all metabolites - can just use V1 TR2 64 acqs since the metabolites are the same for all datasets
     all_metabolites = list(datasets['V1']['TR2_064'].iloc[:,0].unique()) 
 
     # List of metabolites to exclude
@@ -142,19 +140,19 @@ def page_snr():
     # Filter out the excluded metabolites
     metabolites = [metabolite for metabolite in all_metabolites if metabolite not in exclude_metabolites]
     
-    # Create a multiselect box for the volunteers for plot with an "All data sets" option
+    # Create a multiselect box for the user to select volunteers datasets with an "All datasets" option - and make that the default
     v_options = list(datasets.keys())
-    v_options.insert(0, 'All data sets')
-    selected_Vs_plot = st.multiselect('Select a volunteer:', v_options, ['All data sets'], key='plot_v')
+    v_options.insert(0, 'All datasets')
+    selected_Vs_plot = st.multiselect('Select a volunteer:', v_options, ['All datasets'], key='plot_v')
 
-    # If "All data sets" is selected, select all the V datasets
-    if 'All data sets' in selected_Vs_plot:
+    # If "All datasets" is selected, select all the volunteer datasets
+    if 'All datasets' in selected_Vs_plot:
         selected_Vs_plot = list(datasets.keys())
 
-    # Create a select box for the metabolites for plot with 'NAA' as the default value
+    # Create a select box for the metabolites, with 'NAA' as the default value
     selected_metabolite_plot = st.selectbox('Select a metabolite:', metabolites, key='plot_metabolite', index=metabolites.index('NAA') if 'NAA' in metabolites else 0)
 
-    # Define the TR datasets to plot
+    # Define the TR datasets to plot (separated into categories of similar scan time and same number of acqs, twice since one will be normalized... maybe not the most efficient)
     tr_datasets_1 = ['TR2_128', 'TR5_064', 'TR8_032']
     tr_datasets_2 = ['TR2_064', 'TR5_064', 'TR8_064']
     tr_datasets_3 = ['TR2_128', 'TR5_064', 'TR8_032']
@@ -163,33 +161,26 @@ def page_snr():
     # Define the corresponding TR values
     tr_values = [2, 5, 8]
 
-    # Define the colors for each volunteer
-    #colors = {
-    #    'V1': '#541747', #Palatinate - Purple
-    #    'V2': '#3B6A4A', #Hunter Green
-    #    'V3': '#4DA167', #Shamrock Green
-    #    'V4': '#3BC14A', #Dark pastel green
-    #    'V5': '#D499B9'  #Lilac
-    #}
 
-    # Define the colors for each volunteer
-    #colors = {
-    #    'V1': '#39A2AE', #Moonstone - light blue
-    #    'V2': '#55DBCB', #Turquoise
-    #    'V3': '#75E4B3', #Aquamarine
-    #    'V4': '#963484', #Plum
-    #    'V5': '#EF798A'  #Bright Pink
-    #}
+    # # Define the colours for each volunteer
+    # colours = {
+    #     'V1': '#EC1313', #Red (CMYK)
+    #     'V2': '#EC7F11', #Tangerine - Orange
+    #     'V3': '#0DBE1E', #Dark pastel green
+    #     'V4': '#151CDD', #Chrysler blue
+    #     'V5': '#7B065C'  #Byzantium - Purple
+    # }
 
-    # Define the colors for each volunteer
-    colors = {
+    # A slightly more colourblind friendly palette - however, only those with Protanopia will have minor issues distinguising between the green and purple in the above palette.
+    colours = {
         'V1': '#EC1313', #Red (CMYK)
         'V2': '#EC7F11', #Tangerine - Orange
-        'V3': '#0DBE1E', #Dark pastel green
+        'V3': '#10E525', #SGBUS green
         'V4': '#151CDD', #Chrysler blue
-        'V5': '#7B065C'  #Byzantium - Purple
+        'V5': '#610548'  #Tyrian purple
     }
 
+    # Define marker shapes for the plot
     marker_shapes = {
         'V1': 'P',
         'V2': 'D',
@@ -198,11 +189,10 @@ def page_snr():
         'V5': 'X'
     }
     
-    
-    # Create a dictionary that maps the original labels to the new labels
+    # Define a map to represent GPC and PCh as tCho, similar for tCr
     label_map = {'GPC+PCh': 'tCho', 'Cr+PCr': 'tCr'}
     
-    # Create the subplots
+    # Create subplots
     fig, axs = plt.subplots(2, 2, figsize=(20, 14))
     fig.subplots_adjust(hspace=0.4)
 
@@ -212,13 +202,14 @@ def page_snr():
     all_snr_values_3 = []
     all_snr_values_4 = []
 
+    # Sorting the appropriate values into the specified criteria (categories of similar acquisition time and same number of acquisitions)
     # Loop over the selected V datasets
     for selected_V_plot in selected_Vs_plot:
         snr_values_1 = []
         snr_values_2 = []
         snr_values_3 = []
         snr_values_4 = []
-        # Loop over the TR datasets
+        # Loop over the TR datasets (separated into categories of similar scan time and same number of acqs)
         for tr_dataset_1, tr_dataset_2, tr_dataset_3, tr_dataset_4 in zip(tr_datasets_1, tr_datasets_2, tr_datasets_3, tr_datasets_4):
             # Get the selected DataFrame
             df_1 = datasets[selected_V_plot][tr_dataset_1]
@@ -263,10 +254,10 @@ def page_snr():
             all_snr_values_4.append(snr_values_4)
 
         # Plot the SNR values for the current V dataset
-        axs[0, 0].plot(tr_values, snr_values_1, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colors[selected_V_plot], linewidth=4, markersize = 10)
-        axs[0, 1].plot(tr_values, snr_values_2, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colors[selected_V_plot], linewidth=4, markersize = 10)
-        axs[1, 0].plot(tr_values, snr_values_3, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colors[selected_V_plot], linewidth=4, markersize = 10)
-        axs[1, 1].plot(tr_values, snr_values_4, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colors[selected_V_plot], linewidth=4, markersize = 10)
+        axs[0, 0].plot(tr_values, snr_values_1, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colours[selected_V_plot], linewidth=4, markersize = 10)
+        axs[0, 1].plot(tr_values, snr_values_2, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colours[selected_V_plot], linewidth=4, markersize = 10)
+        axs[1, 0].plot(tr_values, snr_values_3, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colours[selected_V_plot], linewidth=4, markersize = 10)
+        axs[1, 1].plot(tr_values, snr_values_4, marker=marker_shapes[selected_V_plot], label=f'Volunteer {selected_V_plot[1]}', color=colours[selected_V_plot], linewidth=4, markersize = 10)
 
     # Calculate the average SNR values for all volunteers
     if all_snr_values_3:
@@ -276,8 +267,8 @@ def page_snr():
         avg_snr_values_4 = np.mean(all_snr_values_4, axis=0)
         axs[1, 1].plot(tr_values, avg_snr_values_4, marker='.', linestyle='--', label='Average', color='black', linewidth=4)
 
-
-    global_fontsize = 16;
+    # General plotting details
+    global_fontsize = 16
 
     axs[0, 0].set_xlabel('TR (s)', fontsize=global_fontsize)
     axs[0, 0].set_ylabel('SNR', fontsize=global_fontsize)
@@ -307,7 +298,7 @@ def page_snr():
     axs[1, 1].set_xticks([2, 5, 8])
     axs[1, 1].tick_params(axis='both', labelsize=global_fontsize);
 
-    # Add the legend only if at least one V dataset is selected
+    # Add the legend only if at least one dataset is selected
     if selected_Vs_plot:
         # Get the handles and labels for the first subplot
         handles1, labels1 = axs[0, 0].get_legend_handles_labels()
@@ -324,12 +315,10 @@ def page_snr():
         # Sort them by labels
         labels3s, handles3s = zip(*sorted(zip(labels3, handles3), key=lambda t: t[0]))
 
-        # Set the legend
+        # Place the legend
         axs[1, 0].legend(handles3s, labels3s, fontsize = 13)
-    #    axs[0, 0].legend() 
-    #    axs[1, 0].legend()
 
-    # Display the plot in Streamlit
+    # Tell streamlit to display the fig
     st.pyplot(fig)
 
 ######################### SNR per unit time #########################
@@ -345,7 +334,7 @@ def page_snr_per_time():
 
     warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning)
 
-    # Define your times
+    # Define the scan times in minutes
     TR2_time = 264/60
     TR5_time = 340/60
     TR8_time = 544/60
@@ -359,10 +348,11 @@ def page_snr_per_time():
     # Filter out the excluded metabolites
     metabolites = [metabolite for metabolite in all_metabolites if metabolite not in exclude_metabolites]
 
-    # Let the user select the metabolite
+    # Make a select box for the user to select a metabolite
     selected_metabolite = st.selectbox('Select a metabolite:', metabolites, index=metabolites.index('NAA'))
 
-    # Allow the user to select a "reference" TR
+    # Allow the user to select a reference TR
+    # First, create a map between the labels in the spreadsheet and something more legible
     tr_pt_mapping = {
     'TR2_128': 'TR=2s, 128acqs',
     'TR5_064': 'TR=5s, 64acqs',
@@ -370,7 +360,7 @@ def page_snr_per_time():
     }
 
     trs_pt = list(tr_pt_mapping.values())
-
+    # Select box for the reference TR
     reference_TR_label = st.selectbox('Select a reference TR:', trs_pt, index=2)
     reference_TR = [key for key, value in tr_pt_mapping.items() if value == reference_TR_label][0]
 
@@ -384,9 +374,7 @@ def page_snr_per_time():
             SNR_per_time[volunteer][TR] = datasets[volunteer][TR].at[metabolite_num, "SNR"] / time
 
 
-
-
-    # Create a DataFrame for plotting
+    # Create a DataFrame for plotting purposes
     SNR_per_time_df = pd.DataFrame({
         'Category': ['TR2_128'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_064'] * len(datasets),
         'Value': [SNR_per_time[v]['TR2_128'] for v in SNR_per_time] +
@@ -394,10 +382,10 @@ def page_snr_per_time():
                 [SNR_per_time[v]['TR8_064'] for v in SNR_per_time]
     })
 
-    # Determine the mean value for the selected TR SNR per time
+    # Determine the mean value of SNR per time for the selected TR 
     mean_SNR_per_time = SNR_per_time_df[SNR_per_time_df['Category'] == reference_TR]['Value'].mean()
 
-    # Calculate the values of the red lines based on the selected reference TR
+    # Calculate the expected SNR per time based on the selected reference TR (this is the red line in the plot)
     line_values = {
         'TR2_128': mean_SNR_per_time * np.sqrt(2/2),
         'TR5_064': mean_SNR_per_time * np.sqrt(2/5),
@@ -429,10 +417,9 @@ def page_snr_per_time():
                 showcaps=False,
                 ax=ax)
 
-    # Add a horizontal line at y=10 for TR2, y=8 for TR5, and y=6 for TR8
+    # Add the dashed horizontal line for the calculated values (actually adding the red lines) - this is using "line value", about 30 lines above this one
     for i, (_, line_value) in enumerate(line_values.items()):
         ax.plot([i-0.4, i+0.4], [line_value, line_value], color='r', linestyle='--', linewidth=6, zorder=11)
-
 
     # Create a custom legend
     from matplotlib.lines import Line2D
@@ -451,7 +438,7 @@ def page_snr_per_time():
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
 
-    # Display the plot in Streamlit
+    # Tell streamlit to display the fig
     st.pyplot(fig)
 
 ############################ Concentration ##########################
@@ -467,7 +454,7 @@ def page_concentration():
     st.markdown("""## Single metabolite analysis""")
     st.markdown("""### Select the volunteer and metabolite of your choice:""")
     
-    # Assuming the first column contains the metabolite names for all sets of data
+    # Make a list of all metabolites in our dataset
     all_metabolites = list(datasets['V1']['TR2_064'].iloc[:,0].unique()) 
 
     # List of metabolites to exclude
@@ -476,42 +463,51 @@ def page_concentration():
     # Filter out the excluded metabolites
     metabolites_conc = [metabolite for metabolite in all_metabolites if metabolite not in exclude_metabolites]
 
-    # Create a multiselect box for the volunteers for plot with an "All data sets" option
+    # Create a multiselect box for the volunteers, include an "All datasets" option
     v_options = list(datasets.keys())
-    v_options.insert(0, 'All data sets')
-    selected_Vs_conc = st.multiselect('Select a volunteer:', v_options, ['All data sets'], key='plot_v')  # Set 'All data sets' as the default option
+    v_options.insert(0, 'All datasets')
+    selected_Vs_conc = st.multiselect('Select a volunteer:', v_options, ['All datasets'], key='plot_v')  # Set 'All datasets' as the default option
 
-    # If "All data sets" is selected, select all the V datasets
-    if 'All data sets' in selected_Vs_conc:
+    # If "All datasets" is selected, select all the V datasets
+    if 'All datasets' in selected_Vs_conc:
         selected_Vs_conc = list(datasets.keys())
 
-    # Create a select box for the metabolites for plot with 'NAA' as the default value
-    # metabolites_conc_avg = list(datasets[selected_V_conc][selected_TR_conc].iloc[:,0].unique())
-
-    # Add the combined metabolite to the list
+    # Add the tCho to the list of metabolites
     metabolites_conc.append('GPC+PCh')
 
+    # Create a select box for the metabolites and set NAA as the default
     selected_metabolite_plot = st.selectbox('Select a metabolite:', metabolites_conc, key='plot_metabolite', index=metabolites_conc.index('NAA') if 'NAA' in metabolites_conc else 0)
 
+    # Define a label map for tCho and tCr
     label_map = {'GPC+PCh': 'tCho', 'Cr+PCr': 'tCr'}
 
-    # Define the corresponding TR values
+    # Define the TR values
     tr_values = [2, 5, 8]
 
-    # Define the TR datasets to plot
+    # Define the TR datasets to plot (similar scan time, and constant number of acquisitions)
     tr_datasets_1 = ['TR2_128', 'TR5_064', 'TR8_032']
     tr_datasets_2 = ['TR2_064', 'TR5_064', 'TR8_064']
 
     
-    # Define the colors for each volunteer
-    colors = {
+    # Define the colours for each volunteer
+    # colours = {
+    #     'V1': '#EC1313', #Red (CMYK)
+    #     'V2': '#EC7F11', #Tangerine - Orange
+    #     'V3': '#0DBE1E', #Dark pastel green
+    #     'V4': '#151CDD', #Chrysler blue
+    #     'V5': '#7B065C'  #Byzantium - Purple
+    # }
+
+    # A slightly more colourblind friendly palette - however, only those with Protanopia will have minor issues distinguising between the green and purple in the above palette.
+    colours = {
         'V1': '#EC1313', #Red (CMYK)
         'V2': '#EC7F11', #Tangerine - Orange
-        'V3': '#0DBE1E', #Dark pastel green
+        'V3': '#10E525', #SGBUS green
         'V4': '#151CDD', #Chrysler blue
-        'V5': '#7B065C'  #Byzantium - Purple
+        'V5': '#610548'  #Tyrian purple
     }
 
+    # Define the markers to be used for plotting
     marker_shapes = {
         'V1': 'P',
         'V2': 'D',
@@ -521,42 +517,42 @@ def page_concentration():
     }
 
 
-   
     # Create the subplots
     fig, axs = plt.subplots(1, 2, figsize=(20, 6))
     plt.subplots_adjust(top=1.2)
 
-    # Initialize lists to store the SNR values for all volunteers
+    # Initialize lists that will store the SNR values for all volunteers
     all_conc_values_1 = []
     all_conc_values_2 = []
 
+    # Sorting the appropriate values into the specified criteria (categories of similar acquisition time and same number of acquisitions)
     # Loop over the selected V datasets
     for selected_V_conc in selected_Vs_conc:
         conc_values_1 = []
         conc_values_2 = []
-        # Loop over the TR datasets
+        # Loop over the TR datasets (separated into categories of similar scan time and same number of acqs)
         for tr_dataset_1, tr_dataset_2 in zip(tr_datasets_1, tr_datasets_2):
             # Get the selected DataFrame
             df_1 = datasets[selected_V_conc][tr_dataset_1]
             df_2 = datasets[selected_V_conc][tr_dataset_2]
 
-            # Check if the selected metabolite is the combined one
+            # Check if the selected metabolite is tCho - then I will combine them
             if selected_metabolite_plot == 'GPC+PCh':
                 metabolites_to_combine = ['GPC', 'PCh']
             else:
                 metabolites_to_combine = [selected_metabolite_plot]
 
-            # Initialize the combined conc values
+            # Initialize the combined concentration values
             combined_conc_value_1 = 0
             combined_conc_value_2 = 0
 
-            # Loop over the metabolites to combine
+            # Loop over the metabolites to combine (If GPC and PCh, it adds the conc. values together, if anything else, then it just has one value and "adds" that to nothing)
             for metabolite_to_combine in metabolites_to_combine:
                 # Filter the DataFrame based on the current metabolite
                 filtered_df_plot_1 = df_1[df_1.iloc[:, 0] == metabolite_to_combine]
                 filtered_df_plot_2 = df_2[df_2.iloc[:, 0] == metabolite_to_combine]
 
-                # Get the conc value and add it to the combined conc value
+                # Get the concentration value and add it to the combined concentration value
                 if not filtered_df_plot_1.empty:
                     conc_value_1 = filtered_df_plot_1['mM'].values[0]
                     combined_conc_value_1 += conc_value_1
@@ -564,23 +560,23 @@ def page_concentration():
                     conc_value_2 = filtered_df_plot_2['mM'].values[0]
                     combined_conc_value_2 += conc_value_2
 
-            # Append the combined conc values to the lists
+            # Append the combined concentration values to the lists
             if combined_conc_value_1:
                 conc_values_1.append(combined_conc_value_1)
             if combined_conc_value_2:
                 conc_values_2.append(combined_conc_value_2)
 
-        # Add the conc values to the lists for all volunteers
+        # Add the concentration values to the lists for all volunteers
         if conc_values_1:
             all_conc_values_1.append(conc_values_1)
         if conc_values_2:
             all_conc_values_2.append(conc_values_2)
 
-        # Plot the conc values for the current V dataset
-        axs[0].plot(tr_values, conc_values_1, marker=marker_shapes[selected_V_conc], label=f'Volunteer {selected_V_conc[1]}', color=colors[selected_V_conc], linewidth=4, markersize = 10)
-        axs[1].plot(tr_values, conc_values_2, marker=marker_shapes[selected_V_conc], label=f'Volunteer {selected_V_conc[1]}', color=colors[selected_V_conc], linewidth=4, markersize = 10)
+        # Plot the concentration values for the current volunteer dataset
+        axs[0].plot(tr_values, conc_values_1, marker=marker_shapes[selected_V_conc], label=f'Volunteer {selected_V_conc[1]}', color=colours[selected_V_conc], linewidth=4, markersize = 10)
+        axs[1].plot(tr_values, conc_values_2, marker=marker_shapes[selected_V_conc], label=f'Volunteer {selected_V_conc[1]}', color=colours[selected_V_conc], linewidth=4, markersize = 10)
 
-    # Calculate the average conc values for all volunteers
+    # Calculate the average concentration values for all volunteers
     if all_conc_values_1:
         avg_conc_values_1 = np.mean(all_conc_values_1, axis=0)
         axs[0].plot(tr_values, avg_conc_values_1, marker='.', linestyle='--', label=f'Average {selected_metabolite_plot}', color='black', linewidth=4)
@@ -588,6 +584,7 @@ def page_concentration():
         avg_conc_values_2 = np.mean(all_conc_values_2, axis=0)
         axs[1].plot(tr_values, avg_conc_values_2, marker='.', linestyle='--', label=f'Average {selected_metabolite_plot}', color='black', linewidth=4)
 
+    # General plotting scheme
     global_fontsize = 16
 
     axs[0].set_xlabel('TR (s)', fontsize=global_fontsize)
@@ -601,11 +598,10 @@ def page_concentration():
     axs[1].set_ylabel('Apparent concentration (mM)', fontsize=global_fontsize)
     axs[1].set_title(f'Same number of acqs., reported conc. comparison for {label_map.get(selected_metabolite_plot, selected_metabolite_plot)}', fontsize=global_fontsize+4)
     axs[1].grid(True)
-    #axs[1].set_facecolor('black')
     axs[1].set_xticks([2, 5, 8])
     axs[1].tick_params(axis='both', labelsize=global_fontsize);
 
-    # Add the legend only if at least one V dataset is selected
+    # Only add the legend if at least one V dataset is selected
     if selected_Vs_conc:
         # Get the handles and labels for the first subplot
         handles1, labels1 = axs[0].get_legend_handles_labels()
@@ -616,7 +612,7 @@ def page_concentration():
         # Set the legend
         axs[0].legend(handles1s, labels1s, fontsize = 13)
 
-    # Display the plot in Streamlit
+    # Tell streamlit to display the plot
     st.pyplot(fig)
 
     ###### Plot the average of the metabolite for many metabolites #########
@@ -624,12 +620,7 @@ def page_concentration():
     st.markdown("""## Many metabolite analysis""")
     st.markdown("""### Select your choice of metabolites:""")
 
-    # Create the subplots
-    fig2, axs2 = plt.subplots(1, 2, figsize=(20, 6))
-    plt.subplots_adjust(top=1.2)
-
-
-    # Assuming the first column contains the metabolite names for all sets of data
+    # Get a list of all metabolites
     all_metabolites = list(datasets['V1']['TR2_064'].iloc[:,0].unique()) 
 
     # List of metabolites to exclude
@@ -638,44 +629,48 @@ def page_concentration():
     # Filter out the excluded metabolites
     metabolites_conc_avg = [metabolite for metabolite in all_metabolites if metabolite not in exclude_metabolites]
 
-
-    # # Assuming the first column contains the metabolite names for all sets of data
-    # metabolites_conc_avg = list(datasets[selected_V_conc]['TR2_128'].iloc[:,0].unique())
-
-    # Add the combined metabolite to the list
+    # Again, add tCho to the list
     metabolites_conc_avg.append('GPC+PCh')
 
+    # Create a multiselect box, where the default is the key 5 metbaolites
     selected_metabolites_plot = st.multiselect('Select metabolites:', metabolites_conc_avg, ['NAA', 'Cr+PCr', 'GPC+PCh', 'mI', 'Glu'], key='average_plot_metabolite')
 
+    # General plotting scheme
+    # Create the subplots
+    fig2, axs2 = plt.subplots(1, 2, figsize=(20, 6))
+    plt.subplots_adjust(top=1.2)
 
-    # Create a color map
-    cmap = plt.get_cmap('jet')
+    # Create a colour map
+    # cmap = plt.get_cmap('jet')
+    cmap = plt.get_cmap('tab20')
 
-    # Create a dictionary to map each metabolite to a color
-    color_dict = {}
+    # Create a dictionary that uniquely maps each metabolite to a colour in our colour map, regardless if it's selected or not
+    colour_dict = {}
     for i, metabolite in enumerate(metabolites_conc_avg):
-        color_dict[metabolite] = cmap(i / len(metabolites_conc_avg))
+        colour_dict[metabolite] = cmap(i / len(metabolites_conc_avg))
 
-    # Always calculate the average for all 5 volunteers
+    # Always calculate/display the average for all 5 volunteers (don't show individual volunteer plots)
     all_Vs = list(datasets.keys())
 
+    # Need to do some calculations/normalization:
     # Loop over the selected metabolites
+    # Sorting the appropriate values into the specified criteria (categories of similar acquisition time and same number of acquisitions)
     for selected_metabolite_plot in selected_metabolites_plot:
-        # Initialize lists to store the conc values for all volunteers
+        # Initialize lists to store the concentration values for all volunteers
         all_conc_values_1 = []
         all_conc_values_2 = []
 
-        # Check if the selected metabolite is the combined one
+        # Check if the selected metabolite tCho
         if selected_metabolite_plot == 'GPC+PCh':
             metabolites_to_combine = ['GPC', 'PCh']
         else:
             metabolites_to_combine = [selected_metabolite_plot]
 
-        # Loop over all the V datasets
+        # Loop over all volunteer datasets
         for selected_V_conc in all_Vs:
             conc_values_1 = []
             conc_values_2 = []
-            # Loop over the TR datasets
+            # Loop over TRs
             for tr_dataset_1, tr_dataset_2 in zip(tr_datasets_1, tr_datasets_2):
                 # Initialize the combined conc values
                 combined_conc_value_1 = 0
@@ -710,12 +705,12 @@ def page_concentration():
             if conc_values_2:
                 all_conc_values_2.append(conc_values_2)
 
-        # Calculate the average conc values for all volunteers
+        # Calculate the average concentration values across volunteers
         if all_conc_values_1:
             avg_conc_values_1 = np.mean(all_conc_values_1, axis=0)
-            # Normalize the average values by the average value at TR8
+            # Normalize the average concentration values to the average concentration at TR8
             avg_conc_values_1 = avg_conc_values_1 / avg_conc_values_1[-1]
-            axs2[0].plot(tr_values, avg_conc_values_1, marker='o', linestyle='-', label=f'{selected_metabolite_plot}', color=color_dict[selected_metabolite_plot], linewidth=5, markersize=12)
+            axs2[0].plot(tr_values, avg_conc_values_1, marker='o', linestyle='-', label=f'{selected_metabolite_plot}', color=colour_dict[selected_metabolite_plot], linewidth=5, markersize=12)
             axs2[0].set_facecolor('black')
             axs2[0].set_xlabel('TR (s)', fontsize=global_fontsize)
             axs2[0].set_ylabel('Normalized apparent concentration', fontsize=global_fontsize)
@@ -727,7 +722,7 @@ def page_concentration():
             avg_conc_values_2 = np.mean(all_conc_values_2, axis=0)
             # Normalize the average values by the average value at TR8
             avg_conc_values_2 = avg_conc_values_2 / avg_conc_values_2[-1]
-            axs2[1].plot(tr_values, avg_conc_values_2, marker='o', linestyle='-', label=f'{selected_metabolite_plot}', color=color_dict[selected_metabolite_plot], linewidth=5, markersize=12)
+            axs2[1].plot(tr_values, avg_conc_values_2, marker='o', linestyle='-', label=f'{selected_metabolite_plot}', color=colour_dict[selected_metabolite_plot], linewidth=5, markersize=12)
             axs2[1].set_facecolor('black')
             axs2[1].set_xlabel('TR (s)', fontsize=global_fontsize)
             axs2[1].set_ylabel('Normalized apparent concentration', fontsize=global_fontsize)
@@ -736,18 +731,19 @@ def page_concentration():
             axs2[1].set_xticks([2, 5, 8])
             axs2[1].tick_params(axis='both', labelsize=global_fontsize);
 
-    # Add the legend only if at least one metabolite is selected
+    # Only add the legend if at least one metabolite is selected
     if selected_metabolites_plot:
         # Get the handles and labels for the first subplot
-        handles1, labels1 = axs2[0].get_legend_handles_labels()
+        handles1, labels1 = axs2[1].get_legend_handles_labels()
 
         # Sort them by labels
         labels1s, handles1s = zip(*sorted(zip(labels1, handles1), key=lambda t: t[0]))
 
-        # Set the legend
-        axs2[0].legend(handles1s, labels1s, fontsize = 13)
+        # Set the legend (have the legend appear outside the figure in case you choose a lot of metabolites)
+        axs2[1].legend(handles1s, labels1s, fontsize = 13, loc='upper left', bbox_to_anchor=(1, 1))
+        
 
-    # Display the plot in Streamlit
+    # Tell Streamlit to display the plot
     st.pyplot(fig2)
 
 ############################### CRLB ################################
@@ -764,16 +760,16 @@ def page_CRLB():
     st.markdown("""### Select the volunteer and metabolite of your choice:""")
 
 
-    # Create a multiselect box for the volunteers for plot with an "All data sets" option
+    # Create a multiselect box for the volunteers with an "All datasets" option, and have that be the default
     v_options = list(datasets.keys())
-    v_options.insert(0, 'All data sets')
-    selected_Vs_CRLBplot = st.multiselect('Select a volunteer:', v_options, ['All data sets'], key='plot_CRLB_v')
+    v_options.insert(0, 'All datasets')
+    selected_Vs_CRLBplot = st.multiselect('Select a volunteer:', v_options, ['All datasets'], key='plot_CRLB_v')
 
     # If "All data sets" is selected, select all the V datasets
-    if 'All data sets' in selected_Vs_CRLBplot:
+    if 'All datasets' in selected_Vs_CRLBplot:
         selected_Vs_CRLBplot = list(datasets.keys())
 
-    # Create a select box for the metabolites for plot with 'NAA' as the default value
+    # Extract all metabolites
     all_metabolites = list(datasets['V1']['TR2_064'].iloc[:,0].unique())
 
     # List of metabolites to exclude
@@ -782,27 +778,35 @@ def page_CRLB():
     # Filter out the excluded metabolites
     metabolites_CRLB = [metabolite for metabolite in all_metabolites if metabolite not in exclude_metabolites]
 
-    # Add the combined metabolite to the list
-    #metabolites_CRLB.append('GPC+PCh')
-
+    # Create the select box for metabolites and set NAA as the default
     selected_metabolite_plot = st.selectbox('Select a metabolite:', metabolites_CRLB, key='plot_metabolite', index=metabolites_CRLB.index('NAA') if 'NAA' in metabolites_CRLB else 0)
 
-    # Define the corresponding TR values
+    # Define the TR values
     tr_values = [2, 5, 8]
 
-    # Define the TR datasets to plot
+    # Define the TR datasets to plot (for the categories of similar acquisition time and same number of acquisitions)
     tr_datasets_1 = ['TR2_128', 'TR5_064', 'TR8_032']
     tr_datasets_2 = ['TR2_064', 'TR5_064', 'TR8_064']
 
-    # Define the colors for each volunteer
-    colors = {
+    # Define the colours for each volunteer
+    # colours = {
+    #     'V1': '#EC1313', #Red (CMYK)
+    #     'V2': '#EC7F11', #Tangerine - Orange
+    #     'V3': '#0DBE1E', #Dark pastel green
+    #     'V4': '#151CDD', #Chrysler blue
+    #     'V5': '#7B065C'  #Byzantium - Purple
+    # }
+
+    # A slightly more colourblind friendly palette - however, only those with Protanopia will have minor issues distinguising between the green and purple in the above palette.
+    colours = {
         'V1': '#EC1313', #Red (CMYK)
         'V2': '#EC7F11', #Tangerine - Orange
-        'V3': '#0DBE1E', #Dark pastel green
+        'V3': '#10E525', #SGBUS green
         'V4': '#151CDD', #Chrysler blue
-        'V5': '#7B065C'  #Byzantium - Purple
+        'V5': '#610548'  #Tyrian purple
     }
 
+    # Define markers for plotting
     marker_shapes = {
         'V1': 'P',
         'V2': 'D',
@@ -811,6 +815,7 @@ def page_CRLB():
         'V5': 'X'
     }
 
+    # Make a label map for tCr
     label_map = {'Cr+PCr': 'tCr'}
 
     # Create the subplots
@@ -818,11 +823,14 @@ def page_CRLB():
     plt.subplots_adjust(top=1.2)
 
     # Initialize lists to store the CRLB values for all volunteers
+    # Two each - one for similar scan time, one for same number of acquisitions
+    # Then one for the mM CRLBs, and one for the relative CRLBs (given as a percentage)
     all_CRLB_values_1 = []
     all_CRLB_values_2 = []
     all_percent_CRLB_values_1 = []
     all_percent_CRLB_values_2 = []
 
+    # Sorting the appropriate values into the specified criteria (for the categories of similar acquisition time and same number of acquisitions)
     # Loop over the selected V datasets
     for selected_V_CRLBplot in selected_Vs_CRLBplot:
         CRLB_values_1 = []
@@ -874,12 +882,12 @@ def page_CRLB():
             all_percent_CRLB_values_2.append(percent_CRLB_values_2)
 
         # Plot the CRLB values for the current V dataset
-        axs[0, 0].plot(tr_values, CRLB_values_1, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colors[selected_V_CRLBplot], linewidth=4, markersize=10)
-        axs[0, 1].plot(tr_values, CRLB_values_2, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colors[selected_V_CRLBplot], linewidth=4, markersize=10)
-        axs[1, 0].plot(tr_values, percent_CRLB_values_1, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colors[selected_V_CRLBplot], linewidth=4, markersize=10)
-        axs[1, 1].plot(tr_values, percent_CRLB_values_2, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colors[selected_V_CRLBplot], linewidth=4, markersize=10)
+        axs[0, 0].plot(tr_values, CRLB_values_1, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colours[selected_V_CRLBplot], linewidth=4, markersize=10)
+        axs[0, 1].plot(tr_values, CRLB_values_2, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colours[selected_V_CRLBplot], linewidth=4, markersize=10)
+        axs[1, 0].plot(tr_values, percent_CRLB_values_1, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colours[selected_V_CRLBplot], linewidth=4, markersize=10)
+        axs[1, 1].plot(tr_values, percent_CRLB_values_2, marker=marker_shapes[selected_V_CRLBplot], label=f'Volunteer {selected_V_CRLBplot[1]}', color=colours[selected_V_CRLBplot], linewidth=4, markersize=10)
 
-    # Calculate the average conc values for all volunteers
+    # Calculate the average CRLB values for all volunteers
     if all_CRLB_values_1:
         avg_CRLB_values_1 = np.mean(all_CRLB_values_1, axis=0)
         axs[0, 0].plot(tr_values, avg_CRLB_values_1, marker='.', linestyle='--', label=f'Average {label_map.get(selected_metabolite_plot, selected_metabolite_plot)}', color='black', linewidth=4)
@@ -893,6 +901,7 @@ def page_CRLB():
         avg_percent_CRLB_values_2 = np.mean(all_percent_CRLB_values_2, axis=0)
         axs[1, 1].plot(tr_values, avg_percent_CRLB_values_2, marker='.', linestyle='--', label=f'Average {label_map.get(selected_metabolite_plot, selected_metabolite_plot)}', color='black', linewidth=4)
 
+    # Plot the results
     global_fontsize = 16
     axs[0, 0].set_xlabel('TR (s)', fontsize=global_fontsize)
     axs[0, 0].set_ylabel('CRLB (mM)', fontsize=global_fontsize)
@@ -922,7 +931,7 @@ def page_CRLB():
     axs[1, 1].set_xticks([2, 5, 8])
     axs[1, 1].tick_params(axis='both', labelsize=global_fontsize)
 
-    # Add the legend only if at least one V dataset is selected
+    # Only add the legend if at least one dataset is selected
     if selected_Vs_CRLBplot:
         # Get the handles and labels for the first subplot
         handles1, labels1 = axs[0, 0].get_legend_handles_labels()
@@ -933,24 +942,26 @@ def page_CRLB():
         # Set the legend
         axs[0, 0].legend(handles1s, labels1s, fontsize=13)
 
-    # Display the plot in Streamlit
+    # Tell Streamlit to plot
     st.pyplot(fig)
-
 
     ## CRLB test plots
 
+    st.markdown("""## CRLB threshold testing""")
 
-    # Define volunteers, TRs, and Metabolites
-    # metabs = datasets['V1']['TR2_064']['Metab']
+    # Define all Metabolites
     metabs = list(datasets['V1']['TR2_064'].iloc[:,0].unique())
-    selected_metab_CRLB = st.selectbox('Select a metabolite to plot', metabs, key='CRLB_metabolite', index=metabs.index('NAA') if 'NAA' in metabs else 0)
-    # Initialize dictionaries to store the combined data for each metabolite
+    
+    # Create a select box, and set NAA to be the default. This time, all metabolites are eligible to be selected as this is how we determine which to reject
+    selected_metab_CRLB = st.selectbox('Select a metabolite:', metabs, key='CRLB_metabolite', index=metabs.index('NAA') if 'NAA' in metabs else 0)
+    
+    # Initialize dictionaries to store all concentrations/CRLBs for each metabolite
     mM_data = {metab: [] for metab in metabs}
     mM_CRLB_data = {metab: [] for metab in metabs}
 
-    # Iterate through each volunteer (V1, V2, V3, V4, V5)
+    # Iterate through each volunteer
     for vol in datasets.keys():
-        # Iterate through each TR (TR2_064, TR2_128, TR5_064, TR8_032, TR8_064)
+        # Iterate through each TR
         for tr in datasets[vol].keys():
             # Get the current dataset
             df = datasets[vol][tr]
@@ -971,12 +982,12 @@ def page_CRLB():
 
     # Define your threshold:
     Percentage = 30 # Default value is 30%
-    threshold = median_mM * Percentage / 100
+    threshold = median_mM * Percentage / 100 # Threshold is 30 % of the median value
 
     # Initialize a dictionary to store the count of values exceeding the threshold for each metabolite
     exceeding_threshold_count = {metab: 0 for metab in metabs}
 
-    # Iterate through each metabolite
+    # Iterate through each metabolite and count those that exceed
     for metab in metabs:
         # Get the threshold value for the current metabolite
         metab_threshold = threshold[metab]
@@ -986,10 +997,14 @@ def page_CRLB():
     # Find metabolites with 20% or more data points exceeding the threshold
     metabolites_exceeding_20 = [metab for metab, count in exceeding_threshold_count.items() if count >= int(round(0.2 * len(mM_df)))]
 
-    # Display the metabolites with more than 20% of data points exceeding the threshold using markdown
-    st.markdown("#### Metabolites with more than 20% of data points exceeding the threshold:")
-    st.markdown(", ".join([f"**{metab}**" for metab in metabolites_exceeding_20]))
+    # List the metabolites with more than 20% of data points exceeding the threshold using markdown
+    st.markdown("### Metabolites with more than 20% of data points exceeding the threshold:")
+    # Using html code to list each of the metabolites as I couldn't do that with my previous method.
+    st.markdown(f"<p style='font-size:22px;'><b>{', '.join(metabolites_exceeding_20)}</b></p>", unsafe_allow_html=True)
 
+
+    # Plot it all
+    # Defined a function for this - I took this sections code from another batch of code I wrote that already did this and a separate function worked well there
     def plot_metabolite_data_single_plot(metab):
         # Get the data for the selected metabolite
         mM_values = mM_df[metab]
@@ -1003,9 +1018,9 @@ def page_CRLB():
         # Generate some jitter for horizontal spread
         jitter = 0.1
         
-        # Plot the mM values with jitter
+        # Plot the mM values with jitter (location is on x "1")
         ax.scatter(np.random.normal(1, jitter, len(mM_values)), mM_values, label='mM values')
-        # Plot the mM CRLB values with jitter
+        # Plot the mM CRLB values with jitter (location on x is "2")
         ax.scatter(np.random.normal(2, jitter, len(mM_CRLB_values)), mM_CRLB_values, label='mM CRLB values')
 
         # Plot the median value line
@@ -1013,7 +1028,7 @@ def page_CRLB():
         # Plot the threshold as a shaded region
         ax.fill_between([0.5, 2.5], 0, threshold_value, color='g', alpha=0.3, label='Threshold Region')
 
-        # Set the title and labels
+        # Set the starting value of the y axis - has to be dynamic so values don't get cut off by the bottom of the graph
         max_conc = np.max(mM_values)
         if max_conc < 1: 
             start_val = -0.03
@@ -1022,16 +1037,16 @@ def page_CRLB():
 
         ax.set_title(f'Concentration and CRLB comparison for: {metab}')
         ax.set_ylabel('Concentration (mM)')
-        ax.set_ylim(bottom=start_val)  # Start y-axis at -0.02
+        ax.set_ylim(bottom=start_val)  
         ax.set_xticks([1, 2])
         ax.set_xticklabels(['Concentration', 'Absolute CRLB'])
         ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
 
-        # Show the plot
+        # Get Streamlit to show the plot
         plt.tight_layout()
         st.pyplot(fig)
 
-    # Use the selected_metabolite_plot variable from the previous code
+    # Call the function I wrote above for the user-selected metabolite
     plot_metabolite_data_single_plot(selected_metab_CRLB)
 
 ############################### FWHM ################################
@@ -1045,16 +1060,16 @@ def page_FWHM():
 
     st.markdown("""### Select the volunteer and metabolite of your choice:""")
 
-    # Create a multiselect box for the volunteers for plot with a "Select All" option
+    # Create a multiselect box for the volunteers with a "Select All" option, and have it be the default
     v_options = list(datasets.keys())
     v_options.insert(0, 'Select All')
     selected_Vs_FWHMplot = st.multiselect('Select a volunteer:', v_options, ['Select All'], key='plot_FWHM_v')
 
-    # If "Select All" is selected, select all the V datasets
+    # If "Select All" is chosen, select all the V datasets
     if 'Select All' in selected_Vs_FWHMplot:
         selected_Vs_FWHMplot = list(datasets.keys())
 
-    # Create a select box for the metabolites for plot with 'NAA' as the default value
+    # Get a list of all metabolites
     all_metabs_FWHM = list(datasets['V1']['TR2_064'].iloc[:,0].unique())
 
     # List of metabolites to exclude
@@ -1063,24 +1078,35 @@ def page_FWHM():
     # Filter out the excluded metabolites
     metabolites_FWHM = [metabolite for metabolite in all_metabs_FWHM if metabolite not in exclude_metabolites]
 
+    # Create a select box for the metabolites with 'NAA' set as the default value
     selected_metabolite_plot = st.selectbox('Select a metabolite:', metabolites_FWHM, key='plot_metabolite', index=metabolites_FWHM.index('NAA') if 'NAA' in metabolites_FWHM else 0)
 
-    # Define the corresponding TR values
+    # Define the TR values
     tr_values = [2, 5, 8]
 
-    # Define the TR datasets to plot
+    # Define the TR datasets to plot (separated into categories of similar scan time and same number of acqs, twice since one will be normalized... maybe not the most efficient)
     tr_datasets_1 = ['TR2_128', 'TR5_064', 'TR8_032']
     tr_datasets_2 = ['TR2_064', 'TR5_064', 'TR8_064']
 
-    # Define the colors for each volunteer
-    colors = {
+    # # Define the colours for each volunteer
+    # colours = {
+    #     'V1': '#EC1313', #Red (CMYK)
+    #     'V2': '#EC7F11', #Tangerine - Orange
+    #     'V3': '#0DBE1E', #Dark pastel green
+    #     'V4': '#151CDD', #Chrysler blue
+    #     'V5': '#7B065C'  #Byzantium - Purple
+    # }
+
+    # A slightly more colourblind friendly palette - however, only those with Protanopia will have minor issues distinguising between the green and purple in the above palette.
+    colours = {
         'V1': '#EC1313', #Red (CMYK)
         'V2': '#EC7F11', #Tangerine - Orange
-        'V3': '#0DBE1E', #Dark pastel green
+        'V3': '#10E525', #SGBUS green
         'V4': '#151CDD', #Chrysler blue
-        'V5': '#7B065C'  #Byzantium - Purple
+        'V5': '#610548'  #Tyrian purple
     }
 
+    # Define the marker shapes used for plotting
     marker_shapes = {
         'V1': 'P',
         'V2': 'D',
@@ -1089,6 +1115,7 @@ def page_FWHM():
         'V5': 'X'
     }
 
+    # Create a label map for tCr
     label_map = {'Cr+PCr': 'tCr'}
 
     # Create the subplots
@@ -1096,9 +1123,11 @@ def page_FWHM():
     plt.subplots_adjust(top=1.2)
 
     # Initialize lists to store the FWHM values for all volunteers
+    # One for similar scan time, one for same number of acquisitions
     all_FWHM_values_1 = []
     all_FWHM_values_2 = []
 
+    # Sorting the appropriate values into the specified criteria (for the categories of similar acquisition time and same number of acquisitions)
     # Loop over the selected V datasets
     for selected_V_FWHMplot in selected_Vs_FWHMplot:
         FWHM_values_1 = []
@@ -1138,10 +1167,10 @@ def page_FWHM():
             all_FWHM_values_2.append(FWHM_values_2)
 
         # Plot the FWHM values for the current V dataset
-        axs[0].plot(tr_values, FWHM_values_1, marker=marker_shapes[selected_V_FWHMplot], label=f'Volunteer {selected_V_FWHMplot[1]}', color=colors[selected_V_FWHMplot], linewidth=4, markersize = 10)
-        axs[1].plot(tr_values, FWHM_values_2, marker=marker_shapes[selected_V_FWHMplot], label=f'Volunteer {selected_V_FWHMplot[1]}', color=colors[selected_V_FWHMplot], linewidth=4, markersize = 10)
+        axs[0].plot(tr_values, FWHM_values_1, marker=marker_shapes[selected_V_FWHMplot], label=f'Volunteer {selected_V_FWHMplot[1]}', color=colours[selected_V_FWHMplot], linewidth=4, markersize = 10)
+        axs[1].plot(tr_values, FWHM_values_2, marker=marker_shapes[selected_V_FWHMplot], label=f'Volunteer {selected_V_FWHMplot[1]}', color=colours[selected_V_FWHMplot], linewidth=4, markersize = 10)
 
-    # Calculate the average conc values for all volunteers
+    # Calculate the average FWHM values for all volunteers
     if all_FWHM_values_1:
         avg_FWHM_values_1 = np.mean(all_FWHM_values_1, axis=0)
         axs[0].plot(tr_values, avg_FWHM_values_1, marker='.', linestyle='--', label=f'Average {label_map.get(selected_metabolite_plot, selected_metabolite_plot)}', color='black', linewidth=4)
@@ -1149,8 +1178,9 @@ def page_FWHM():
         avg_conc_values_2 = np.mean(all_FWHM_values_2, axis=0)
         axs[1].plot(tr_values, avg_conc_values_2, marker='.', linestyle='--', label=f'Average {label_map.get(selected_metabolite_plot, selected_metabolite_plot)}', color='black', linewidth=4)
 
-    global_fontsize = 16
 
+    # General plotting scheme
+    global_fontsize = 16
 
     axs[0].set_xlabel('TR (s)', fontsize=global_fontsize)
     axs[0].set_ylabel('FWHM', fontsize=global_fontsize)
@@ -1163,11 +1193,10 @@ def page_FWHM():
     axs[1].set_ylabel('FWHM', fontsize=global_fontsize)
     axs[1].set_title(f'Same number of acqs.: FWHM comparison for {label_map.get(selected_metabolite_plot, selected_metabolite_plot)}', fontsize=global_fontsize+4)
     axs[1].grid(True)
-    #axs[1].set_facecolor('black')
     axs[1].set_xticks([2, 5, 8])
     axs[1].tick_params(axis='both', labelsize=global_fontsize);
 
-    # Add the legend only if at least one V dataset is selected
+    # Only add the legend if at least one dataset is selected
     if selected_Vs_FWHMplot:
         # Get the handles and labels for the first subplot
         handles1, labels1 = axs[0].get_legend_handles_labels()
@@ -1178,7 +1207,7 @@ def page_FWHM():
         # Set the legend
         axs[0].legend(handles1s, labels1s, fontsize = 13)
 
-    # Display the plot in Streamlit
+    # Tell Streamlit to display the plot
     st.pyplot(fig)
 
 ############################ T1 fitting #############################
@@ -1197,19 +1226,18 @@ def page_T1_fit():
     st.markdown("""## Single metabolite fit""")
     st.markdown("""### Select a metabolite of your choice:""")
 
-    # Fit function
+    # Define the saturation recovery fit function
     def sat_rec(TR, M0, T1):
         return M0*(1-np.exp(-TR/T1))
 
     # TRs
     TRs = [2, 5, 8]
 
-    # linespace for TRs
-    TR_fit = np.linspace(0, 10, 250)  # Generate a smooth TR range for the fit
+    # Generate a smooth range of values for when we display the fit
+    TR_fit = np.linspace(0, 10, 250) 
 
-    # Initial guesses for M0 and T1
+    # Initial guesses for M0 and T1 (has to be good for all metabolites)
     params_initial_guess = [10, 1.2]
-
 
     # Get a list of all metabolites
     all_metabolites = datasets['V1']['TR2_064'].iloc[:, 0].tolist()
@@ -1220,34 +1248,39 @@ def page_T1_fit():
     # Filter out the excluded metabolites
     metabolites = [metabolite for metabolite in all_metabolites if metabolite not in exclude_metabolites]
 
-
-    # Add the combined metabolite to the list
+    # Add tCho to the list
     if 'GPC+PCh' not in metabolites:
         metabolites.append('GPC+PCh')
 
-    # Let the user select the metabolite
+    # Create a select box to let the user choose a metabolite, have NAA be the default
     selected_metabolite = st.selectbox('Select a metabolite:', metabolites, index=metabolites.index('NAA'))
 
+    # Initialize the arrays that will be populated with the fit parameters for each volunteer
     T1_array = []
     M0_array = []
 
     for v in ['V1', 'V2', 'V3', 'V4', 'V5']:
-        # Check if the selected metabolite is the combined one
+        # Check if the selected metabolite is tCho and thus if we need to combine the GPC and PCh concentration values
         if selected_metabolite == 'GPC+PCh':
             metabolites_to_combine = ['GPC', 'PCh']
         else:
             metabolites_to_combine = [selected_metabolite]
 
+        # Initialize the concentration values for tCho
         combined_y_values = [0, 0, 0]
+        # Combine the GPC and PCh values
         for metabolite_to_combine in metabolites_to_combine:
             # Select the row corresponding to the current metabolite
             y_values = [datasets[v][tr]['mM'][datasets[v][tr].iloc[:, 0] == metabolite_to_combine].values[0] for tr in ['TR2_128', 'TR5_064', 'TR8_064']]
             combined_y_values = [sum(x) for x in zip(combined_y_values, y_values)]
 
+        # Curve fit the concentration values for the selected metabolite across each volunteer
         p_opt, p_cov = curve_fit(sat_rec, TRs, combined_y_values, p0=params_initial_guess)
+        # Store the curve fit parameters in the T1 and M0 arrays
         T1_array.append(p_opt[1])
         M0_array.append(p_opt[0])
 
+    # Find the average and standard deviation across the volunteers
     mean_T1 = np.mean(T1_array)
     std_T1 = np.std(T1_array)
     mean_M0 = np.mean(M0_array)
@@ -1255,18 +1288,19 @@ def page_T1_fit():
     st.markdown(f"""#### Mean T$_1$ = {mean_T1:.4f} s""")
     st.markdown(f"""#### Standard Deviation = {std_T1:.4f} s""")
 
-
-
-    # Create a dictionary that maps the original labels to the new labels
+    # Plot the fits
+    # Create a dictionary that maps the labels for tCho and tCr
     label_map = {'GPC+PCh': 'tCho', 'Cr+PCr': 'tCr'}
 
     fig = plt.figure(figsize=(10, 6))
     markers = ['v', 'o', 'd', '*', '>']
-    colors = ['#0c2343', '#2e86ab', '#eeb868', '#c83349', '#5b7065']
+    # colours = ['#0c2343', '#2e86ab', '#eeb868', '#c83349', '#5b7065']
+    colours = ['#EC1313', '#EC7F11', '#10E525', '#151CDD', '#610548'] # These colours match the volunteer colour schemes on other pages.
 
     plt.plot(TR_fit, sat_rec(TR_fit, mean_M0, mean_T1), color='#0c2343', linewidth=10, alpha=1, label='Average Fit')
+    # Have to do this again since we are plotting each volunteer and we've lost the previous values. Copy/paste! But with plotting instead of calculating this time.
     for i, v in enumerate(['V1', 'V2', 'V3', 'V4', 'V5']):
-        # Check if the selected metabolite is the combined one
+        # Check if the selected metabolite is tCho
         if selected_metabolite == 'GPC+PCh':
             metabolites_to_combine = ['GPC', 'PCh']
         else:
@@ -1279,8 +1313,8 @@ def page_T1_fit():
             combined_y_values = [sum(x) for x in zip(combined_y_values, y_values)]
 
         p_opt, p_cov = curve_fit(sat_rec, TRs, combined_y_values, p0=params_initial_guess)
-        plt.scatter(TRs, combined_y_values, s=100, color=colors[i], alpha=0.7, marker=markers[i])
-        plt.plot(TR_fit, sat_rec(TR_fit, *p_opt), color=colors[i], linewidth=5, alpha=0.3, label=f'Fit for {v}')
+        plt.scatter(TRs, combined_y_values, s=100, color=colours[i], alpha=0.7, marker=markers[i])
+        plt.plot(TR_fit, sat_rec(TR_fit, *p_opt), color=colours[i], linewidth=5, alpha=0.3, label=f'Fit for {v}')
 
     plt.xlabel('TR (s)', fontsize=20)
     plt.ylabel('Apparent Conc. (mM)', fontsize=20)
@@ -1289,21 +1323,26 @@ def page_T1_fit():
     plt.yticks(fontsize=20)
     plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
     
+    # Tell streamlit to plot the figure
     st.pyplot(fig)
 
+
+    # Plot the average/std of many selected metabolites
     st.markdown("""## Many metabolite T$_1$ comparison""")
     st.markdown("""### Select your choice of metabolites:""")
     
     # Let the user select multiple metabolites
     selected_metabolites = st.multiselect('Select metabolites:', metabolites, default=['NAA','GPC+PCh','Cr+PCr','mI','Glu'])
 
+    # Initialize the average values and standard deviations for plotting
     T1_values = []
     T1_errs = []
 
+    # Loop through all metabolites and determine the average and standard deviation T1 values
     for selected_metabolite in selected_metabolites:
         T1_array = []
         for v in ['V1', 'V2', 'V3', 'V4', 'V5']:
-            # Check if the selected metabolite is the combined one
+            # Check if the selected metabolite is tCho
             if selected_metabolite == 'GPC+PCh':
                 metabolites_to_combine = ['GPC', 'PCh']
             else:
@@ -1324,8 +1363,7 @@ def page_T1_fit():
         T1_values.append(mean_T1)
         T1_errs.append(std_T1)
 
-
-    # Create a dictionary that maps the original labels to the new labels
+    # Create a dictionary that maps the spreadsheet labels to tCho and tCr
     label_map = {'GPC+PCh': 'tCho', 'Cr+PCr': 'tCr'}
 
     # Create a figure and axis for the error bar plot
@@ -1355,8 +1393,8 @@ def page_T1_fit():
     # Set the limits of the x-axis
     ax.set_xlim(0.5, len(selected_metabolites) + 0.5)
 
+    # Tell Streamlit to plot the figure
     st.pyplot(fig)
-
 
 
 # Define the pages
@@ -1369,7 +1407,6 @@ pages = {
     "CRLB": page_CRLB,
     "FWHM": page_FWHM,
     "T1 Fitting": page_T1_fit,
-
 }
 
 # Create a select box in the sidebar for navigation

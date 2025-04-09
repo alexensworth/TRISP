@@ -49,6 +49,35 @@ datasets = {
     },
 }
 
+    # Data upload
+datasets_T1 = {
+    'V1': {
+        'TR2_128': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V1_TR2_128_T1.csv'),
+        'TR5_064': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V1_TR5_064_T1.csv'),
+        'TR8_064': pd.read_csv('Interactive_TRISP_data/V1_TR8_064.csv')
+    },
+    'V2': {
+        'TR2_128': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V2_TR2_128_T1.csv'),
+        'TR5_064': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V2_TR5_064_T1.csv'),
+        'TR8_064': pd.read_csv('Interactive_TRISP_data/V2_TR8_064.csv')
+    },
+    'V3': {
+        'TR2_128': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V3_TR2_128_T1.csv'),
+        'TR5_064': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V3_TR5_064_T1.csv'),
+        'TR8_064': pd.read_csv('Interactive_TRISP_data/V3_TR8_064.csv')
+    },
+    'V4': {
+        'TR2_128': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V4_TR2_128_T1.csv'),
+        'TR5_064': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V4_TR5_064_T1.csv'),
+        'TR8_064': pd.read_csv('Interactive_TRISP_data/V4_TR8_064.csv')
+    },
+    'V5': {
+        'TR2_128': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V5_TR2_128_T1.csv'),
+        'TR5_064': pd.read_csv('Interactive_TRISP_data/T1_analysis_data/V5_TR5_064_T1.csv'),
+        'TR8_064': pd.read_csv('Interactive_TRISP_data/V5_TR8_064.csv')
+    },
+}
+
 # Define a map for TR labels as they are in the spreadsheet to what you want them to be displayed as
 tr_mapping = {
     'TR2_128': 'TR=2s, 128acqs',
@@ -62,8 +91,11 @@ trs = [tr_mapping[tr] for tr in datasets['V1'].keys()]
 
 ############################ Introduction ###########################
 def page_intro():
-    st.markdown("""# An Investigation of the Impact of Repetition Time on MR Spectroscopy""")
-    st.markdown("""## Purpose:""")
+    #st.markdown("""# An Investigation of the Impact of Repetition Time on MR Spectroscopy""")
+    st.image('Interactive_TRISP_data/Streamlit_Title_Page.png')
+    st.markdown("""## The Manuscript:""") 
+    st.markdown("""This application powered by Python's streamlit toolkit is the extended, interative analysis of the manuscript titled "The Goldilocks zone for 3T MRS studies using semi-LASER: Determining the optimal balance between repetition time and scan time." """) 
+    st.markdown("""## Purpose:""") 
     st.markdown("""#### This study aims to determine the optimal balance between scan time and repetition time that minimizes T$_1$ weighting effects.""")
     st.markdown("""## Study Details:""")
     st.markdown("""- 5 healthy controls (mean age 25 $\pm$ 2 years)""")
@@ -326,18 +358,103 @@ def page_snr_per_time():
     st.header("SNR per Unit Scan Time")
 
     st.markdown("""#### Explanation:""")
-    st.markdown("""This page accompanies Figure 3 in the manuscript.""")
-    st.markdown("""The SNR for a metabolite is divided by the scan time at each TR and is plotted for every volunteer. The average of all volunteers is represented by a solid black line.""")
-    st.markdown("""The calculated SNR is shown as a dashed red line. This calculation is based on the expected increase or decrease in SNR when moving from one TR to another, due to additional acquisitions in a given time period. You can change the reference point, and the calculated values will adjust accordingly.""")
+    st.markdown("""- This page accompanies **Figure 3** in the manuscript.""")
+    st.markdown("""- The SNR for a metabolite is divided by the scan time (NSA x TR) at each TR and is plotted for every volunteer. The average of all volunteers is represented by a **solid black line**.""")
+    st.markdown("""- The expected SNR is calculated according to equation 2 in the manuscript:""")
+    st.latex(r'''
+             \textup{SNR}/\textup{minute}=\textup{SNR}(\textup{TR}_\textup{ref}\textup{, NSA}_\textup{ref}) 
+             \times \sqrt{\frac{\textup{NSA}_\textup{target}}{\textup{NSA}_\textup{ref}}}
+             \times \frac{M_z(\textup{TR}_\textup{target})}{M_z(\textup{TR}_\textup{ref})}
+             \times \frac{60\textup{ seconds}}{\textup{TR}_\textup{target}\times\textup{NSA}_\textup{target}}
+    ''')
+    st.markdown("""where $M_z$ is the saturation recovery in the z direction:""")
+    st.latex(r'''
+             M_z(\textup{TR})=M_0\left[1-\exp\left(-\frac{\textup{TR}}{T_1}\right) \right]
+    ''')
+    st.markdown("""- For example, if we use the SNR for TR = 8 s and NSA = 32 as our reference (ref), and we want to determine the expected value for TR = 2 s, NSA = 128 (the target), then the expected SNR per minte for TR = 2 s, NSA = 128 would be:""")
+    st.latex(r'''
+             \textup{SNR}/\textup{minute}=\textup{SNR}_{(\textup{TR=8}\textup{, NSA=32})} 
+             \times \sqrt{\frac{128}{32}}
+             \times \frac{ 1-\textup{e}^{-2/T_1} }{ 1-\textup{e}^{-8/T_1} }
+             \times \frac{60\textup{ s}}{2\textup{ s}\times 128}
+    ''')
+    st.markdown("""- The expected SNR **without any $ T_1$ effects** $(T_1<<TR)$ is shown as a :red[dashed red line]. This is included as a reference of how much signal is being lost due to $T_1$ effects.""")
+    st.markdown("""- The expected SNR **with $T_1$ effects** is included as a :blue[dotted blue line]. You are able to change the $T_1$ value, which might be useful depending on the metabolite selected, or for purposes of comparing different $T_1$ relaxation conditions.""")
+    st.markdown("""- You can also change which data set is the reference. All calculated values will adjust accordingly.""")
 
-    st.markdown("""### Select the metabolite and reference TR of your choice:""")
+    st.markdown("""### Select the dataset type, metabolite, reference TR and T$_1$ of your choice:""")
 
     warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning)
 
-    # Define the scan times in minutes
-    TR2_time = 264/60
-    TR5_time = 340/60
-    TR8_time = 544/60
+    # Add a dropdown menu for dataset selection
+    dataset_choice = st.selectbox(
+        "Select the dataset to plot:", 
+        options=["Similar scan time", "Same NSA", "Maximum Signal"],
+        index=0  # Default is "Similar scan time"
+    )
+    # Add a description based on the selected dataset
+    if dataset_choice == "Similar scan time":
+        st.markdown("**For similar scan time, we have:**")
+        st.markdown("""
+        - TR = 2s, NSA = 128  
+        - TR = 5s, NSA = 64  
+        - TR = 8s, NSA = 32
+        """)
+    elif dataset_choice == "Same NSA":
+        st.markdown("**For same NSA, we have:**")
+        st.markdown("""
+        - TR = 2s, NSA = 64  
+        - TR = 5s, NSA = 64  
+        - TR = 8s, NSA = 64
+        """)
+    elif dataset_choice == "Maximum Signal":
+        st.markdown("**For maximum signal, we have:**")
+        st.markdown("""
+        - TR = 2s, NSA = 128  
+        - TR = 5s, NSA = 64  
+        - TR = 8s, NSA = 64
+        """)
+
+
+    # Define the scan times based on the dataset choice
+    if dataset_choice == "Similar scan time":
+        TR2_time = 128 * 2 / 60
+        TR5_time = 64 * 5 / 60
+        TR8_time = 32 * 8 / 60
+        tr_pt_mapping = {
+            'TR2_128': 'TR=2s, 128acqs',
+            #'TR2_064': 'TR=2s, 64acqs',
+            'TR5_064': 'TR=5s, 64acqs',
+            #'TR8_064': 'TR=8s, 64acqs',
+            'TR8_032': 'TR=8s, 32acqs',
+        }
+    elif dataset_choice == "Same NSA":
+        TR2_time = 64 * 2 / 60
+        TR5_time = 64 * 5 / 60
+        TR8_time = 64 * 8 / 60
+        tr_pt_mapping = {
+            # 'TR2_128': 'TR=2s, 128acqs',
+            'TR2_064': 'TR=2s, 64acqs',
+            'TR5_064': 'TR=5s, 64acqs',
+            'TR8_064': 'TR=8s, 64acqs',
+            # 'TR8_032': 'TR=8s, 32acqs',
+        }
+    elif dataset_choice == "Maximum Signal":
+        TR2_time = 128 * 2 / 60
+        TR5_time = 64 * 5 / 60
+        TR8_time = 64 * 8 / 60
+        tr_pt_mapping = {
+            'TR2_128': 'TR=2s, 128acqs',
+            #'TR2_064': 'TR=2s, 64acqs',
+            'TR5_064': 'TR=5s, 64acqs',
+            'TR8_064': 'TR=8s, 64acqs',
+            # 'TR8_032': 'TR=8s, 32acqs',
+        }
+
+
+    # Define T1w
+    def T1w(TR, T1):
+        return (1-np.exp(-TR/T1))
 
     # Get a list of all metabolites
     all_metabolites = list(datasets['V1']['TR2_064'].iloc[:,0].unique()) 
@@ -353,16 +470,20 @@ def page_snr_per_time():
 
     # Allow the user to select a reference TR
     # First, create a map between the labels in the spreadsheet and something more legible
-    tr_pt_mapping = {
-    'TR2_128': 'TR=2s, 128acqs',
-    'TR5_064': 'TR=5s, 64acqs',
-    'TR8_064': 'TR=8s, 64acqs',
-    }
+    # tr_pt_mapping = {
+    # 'TR2_128': 'TR=2s, 128acqs',
+    # #'TR2_064': 'TR=2s, 64acqs',
+    # 'TR5_064': 'TR=5s, 64acqs',
+    # #'TR8_064': 'TR=8s, 64acqs',
+    # 'TR8_032': 'TR=8s, 32acqs',
+    # }
 
     trs_pt = list(tr_pt_mapping.values())
     # Select box for the reference TR
     reference_TR_label = st.selectbox('Select a reference TR:', trs_pt, index=2)
     reference_TR = [key for key, value in tr_pt_mapping.items() if value == reference_TR_label][0]
+
+    reference_T1 = st.number_input('Choose a T$_1$ relaxation time (seconds):', 0.01, max_value=None, value = 1.5)
 
     # Calculate SNR per time for each volunteer and each TR
     SNR_per_time = {}
@@ -375,37 +496,202 @@ def page_snr_per_time():
 
 
     # Create a DataFrame for plotting purposes
-    SNR_per_time_df = pd.DataFrame({
+    if dataset_choice == "Similar scan time":
+        SNR_per_time_df = pd.DataFrame({
+        'Category': ['TR2_128'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_032'] * len(datasets),
+        'Value': [SNR_per_time[v]['TR2_128'] for v in SNR_per_time] +
+                [SNR_per_time[v]['TR5_064'] for v in SNR_per_time] +
+                [SNR_per_time[v]['TR8_032'] for v in SNR_per_time]
+        })    
+    elif dataset_choice == "Same NSA":
+        SNR_per_time_df = pd.DataFrame({
+        'Category': ['TR2_064'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_064'] * len(datasets),
+        'Value': [SNR_per_time[v]['TR2_064'] for v in SNR_per_time] +
+                [SNR_per_time[v]['TR5_064'] for v in SNR_per_time] +
+                [SNR_per_time[v]['TR8_064'] for v in SNR_per_time]
+        })
+    elif dataset_choice == "Maximum Signal":
+        SNR_per_time_df = pd.DataFrame({
         'Category': ['TR2_128'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_064'] * len(datasets),
         'Value': [SNR_per_time[v]['TR2_128'] for v in SNR_per_time] +
                 [SNR_per_time[v]['TR5_064'] for v in SNR_per_time] +
                 [SNR_per_time[v]['TR8_064'] for v in SNR_per_time]
+        })
+
+
+
+        # Create a DataFrame for plotting purposes
+    # SNR_per_time_df = pd.DataFrame({
+    #     'Category': ['TR2_128'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_032'] * len(datasets),
+    #     'Value': [SNR_per_time[v]['TR2_128'] for v in SNR_per_time] +
+    #             [SNR_per_time[v]['TR5_064'] for v in SNR_per_time] +
+    #             [SNR_per_time[v]['TR8_032'] for v in SNR_per_time]
+    # })
+
+        # Calculate SNR per time for each volunteer and each TR
+    SNR_abs = {}
+    for volunteer in datasets:
+        SNR_abs[volunteer] = {}
+        for TR in datasets[volunteer]:
+            metabolite_num = datasets[volunteer][TR].index[datasets[volunteer][TR].iloc[:, 0] == selected_metabolite][0]
+            SNR_abs[volunteer][TR] = datasets[volunteer][TR].at[metabolite_num, "SNR"]
+
+    
+    # Create a DataFrame for plotting purposes
+    SNR_abs_df = pd.DataFrame({
+        'Category': ['TR2_128'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_032'] * len(datasets),
+        'Value': [SNR_abs[v]['TR2_128'] for v in SNR_abs] +
+                [SNR_abs[v]['TR5_064'] for v in SNR_abs] +
+                [SNR_abs[v]['TR8_032'] for v in SNR_abs]
     })
 
-    # Determine the mean value of SNR per time for the selected TR 
-    mean_SNR_per_time = SNR_per_time_df[SNR_per_time_df['Category'] == reference_TR]['Value'].mean()
+    if dataset_choice == "Similar scan time":
+        SNR_abs_df = pd.DataFrame({
+        'Category': ['TR2_128'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_032'] * len(datasets),
+        'Value': [SNR_abs[v]['TR2_128'] for v in SNR_abs] +
+                [SNR_abs[v]['TR5_064'] for v in SNR_abs] +
+                [SNR_abs[v]['TR8_032'] for v in SNR_abs]
+        }) 
+    elif dataset_choice == "Same NSA":
+        SNR_abs_df = pd.DataFrame({
+        'Category': ['TR2_064'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_064'] * len(datasets),
+        'Value': [SNR_abs[v]['TR2_064'] for v in SNR_abs] +
+                [SNR_abs[v]['TR5_064'] for v in SNR_abs] +
+                [SNR_abs[v]['TR8_064'] for v in SNR_abs]
+        }) 
+    elif dataset_choice == "Maximum Signal":
+        SNR_abs_df = pd.DataFrame({
+        'Category': ['TR2_128'] * len(datasets) + ['TR5_064'] * len(datasets) + ['TR8_064'] * len(datasets),
+        'Value': [SNR_abs[v]['TR2_128'] for v in SNR_abs] +
+                [SNR_abs[v]['TR5_064'] for v in SNR_abs] +
+                [SNR_abs[v]['TR8_064'] for v in SNR_abs]
+        }) 
 
+    # Determine the mean value of SNR per time for the selected TR 
+    mean_SNR_abs = SNR_abs_df[SNR_abs_df['Category'] == reference_TR]['Value'].mean()
+   
     # Calculate the expected SNR per time based on the selected reference TR (this is the red line in the plot)
     line_values = {
-        'TR2_128': mean_SNR_per_time * np.sqrt(2/2),
-        'TR5_064': mean_SNR_per_time * np.sqrt(2/5),
-        'TR8_064': mean_SNR_per_time * np.sqrt(2/8)
+        'TR2_128': mean_SNR_abs * np.sqrt(128/128)/TR2_time,
+        'TR5_064': mean_SNR_abs * np.sqrt(64/128)/TR5_time,
+        'TR8_032': mean_SNR_abs * np.sqrt(32/128)/TR8_time
     } if reference_TR == 'TR2_128' else {
-        'TR2_128': mean_SNR_per_time * np.sqrt(5/2),
-        'TR5_064': mean_SNR_per_time * np.sqrt(5/5),
-        'TR8_064': mean_SNR_per_time * np.sqrt(5/8)
+        'TR2_128': mean_SNR_abs * np.sqrt(128/64)/TR2_time,
+        'TR5_064': mean_SNR_abs * np.sqrt(64/64)/TR5_time,
+        'TR8_032': mean_SNR_abs * np.sqrt(32/64)/TR8_time
     } if reference_TR == 'TR5_064' else {
-        'TR2_128': mean_SNR_per_time * np.sqrt(8/2),
-        'TR5_064': mean_SNR_per_time * np.sqrt(8/5),
-        'TR8_064': mean_SNR_per_time * np.sqrt(8/8)
+        'TR2_128': mean_SNR_abs * np.sqrt(128/32)/TR2_time,
+        'TR5_064': mean_SNR_abs * np.sqrt(64/32)/TR5_time,
+        'TR8_032': mean_SNR_abs * np.sqrt(32/32)/TR8_time
     }
+    
+    line_values_T1 = {
+        'TR2_128': mean_SNR_abs * np.sqrt(128/128)*(T1w(2,reference_T1)/T1w(2,reference_T1))/TR2_time,
+        'TR5_064': mean_SNR_abs * np.sqrt(64/128)*(T1w(5,reference_T1)/T1w(2,reference_T1))/TR5_time,
+        'TR8_032': mean_SNR_abs * np.sqrt(32/128)*(T1w(8,reference_T1)/T1w(2,reference_T1))/TR8_time
+    } if reference_TR == 'TR2_128' else {
+        'TR2_128': mean_SNR_abs * np.sqrt(128/64)*(T1w(2,reference_T1)/T1w(5,reference_T1))/TR2_time,
+        'TR5_064': mean_SNR_abs * np.sqrt(64/64)*(T1w(5,reference_T1)/T1w(5,reference_T1))/TR5_time,
+        'TR8_032': mean_SNR_abs * np.sqrt(32/64)*(T1w(8,reference_T1)/T1w(5,reference_T1))/TR8_time
+    } if reference_TR == 'TR5_064' else {
+        'TR2_128': mean_SNR_abs * np.sqrt(128/32)*(T1w(2,reference_T1)/T1w(8,reference_T1))/TR2_time,
+        'TR5_064': mean_SNR_abs * np.sqrt(64/32)*(T1w(5,reference_T1)/T1w(8,reference_T1))/TR5_time,
+        'TR8_032': mean_SNR_abs * np.sqrt(32/32)*(T1w(8,reference_T1)/T1w(8,reference_T1))/TR8_time
+    }
+
+    if dataset_choice == "Similar scan time":
+        line_values = {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/128)/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/128)/TR5_time,
+            'TR8_032': mean_SNR_abs * np.sqrt(32/128)/TR8_time
+        } if reference_TR == 'TR2_128' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/64)/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/64)/TR5_time,
+            'TR8_032': mean_SNR_abs * np.sqrt(32/64)/TR8_time
+        } if reference_TR == 'TR5_064' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/32)/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/32)/TR5_time,
+            'TR8_032': mean_SNR_abs * np.sqrt(32/32)/TR8_time
+        }
+        
+        line_values_T1 = {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/128)*(T1w(2,reference_T1)/T1w(2,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/128)*(T1w(5,reference_T1)/T1w(2,reference_T1))/TR5_time,
+            'TR8_032': mean_SNR_abs * np.sqrt(32/128)*(T1w(8,reference_T1)/T1w(2,reference_T1))/TR8_time
+        } if reference_TR == 'TR2_128' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/64)*(T1w(2,reference_T1)/T1w(5,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/64)*(T1w(5,reference_T1)/T1w(5,reference_T1))/TR5_time,
+            'TR8_032': mean_SNR_abs * np.sqrt(32/64)*(T1w(8,reference_T1)/T1w(5,reference_T1))/TR8_time
+        } if reference_TR == 'TR5_064' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/32)*(T1w(2,reference_T1)/T1w(8,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/32)*(T1w(5,reference_T1)/T1w(8,reference_T1))/TR5_time,
+            'TR8_032': mean_SNR_abs * np.sqrt(32/32)*(T1w(8,reference_T1)/T1w(8,reference_T1))/TR8_time
+        }
+    elif dataset_choice == "Same NSA":
+        line_values = {
+            'TR2_064': mean_SNR_abs /TR2_time,
+            'TR5_064': mean_SNR_abs /TR5_time,
+            'TR8_064': mean_SNR_abs /TR8_time
+        } if reference_TR == 'TR2_128' else {
+            'TR2_064': mean_SNR_abs /TR2_time,
+            'TR5_064': mean_SNR_abs /TR5_time,
+            'TR8_064': mean_SNR_abs /TR8_time
+        } if reference_TR == 'TR5_064' else {
+            'TR2_064': mean_SNR_abs /TR2_time,
+            'TR5_064': mean_SNR_abs /TR5_time,
+            'TR8_064': mean_SNR_abs /TR8_time
+        }
+        
+        line_values_T1 = {
+            'TR2_064': mean_SNR_abs *(T1w(2,reference_T1)/T1w(2,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs *(T1w(5,reference_T1)/T1w(2,reference_T1))/TR5_time,
+            'TR8_064': mean_SNR_abs *(T1w(8,reference_T1)/T1w(2,reference_T1))/TR8_time
+        } if reference_TR == 'TR2_128' else {
+            'TR2_064': mean_SNR_abs *(T1w(2,reference_T1)/T1w(5,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs *(T1w(5,reference_T1)/T1w(5,reference_T1))/TR5_time,
+            'TR8_064': mean_SNR_abs *(T1w(8,reference_T1)/T1w(5,reference_T1))/TR8_time
+        } if reference_TR == 'TR5_064' else {
+            'TR2_064': mean_SNR_abs *(T1w(2,reference_T1)/T1w(8,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs *(T1w(5,reference_T1)/T1w(8,reference_T1))/TR5_time,
+            'TR8_064': mean_SNR_abs *(T1w(8,reference_T1)/T1w(8,reference_T1))/TR8_time
+        }
+    elif dataset_choice == "Maximum Signal":
+        line_values = {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/128)/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/128)/TR5_time,
+            'TR8_064': mean_SNR_abs * np.sqrt(64/128)/TR8_time
+        } if reference_TR == 'TR2_128' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/64)/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/64)/TR5_time,
+            'TR8_064': mean_SNR_abs * np.sqrt(64/64)/TR8_time
+        } if reference_TR == 'TR5_064' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/64)/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/64)/TR5_time,
+            'TR8_064': mean_SNR_abs * np.sqrt(64/64)/TR8_time
+        }
+        
+        line_values_T1 = {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/128)*(T1w(2,reference_T1)/T1w(2,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/128)*(T1w(5,reference_T1)/T1w(2,reference_T1))/TR5_time,
+            'TR8_064': mean_SNR_abs * np.sqrt(64/128)*(T1w(8,reference_T1)/T1w(2,reference_T1))/TR8_time
+        } if reference_TR == 'TR2_128' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/64)*(T1w(2,reference_T1)/T1w(5,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/64)*(T1w(5,reference_T1)/T1w(5,reference_T1))/TR5_time,
+            'TR8_064': mean_SNR_abs * np.sqrt(64/64)*(T1w(8,reference_T1)/T1w(5,reference_T1))/TR8_time
+        } if reference_TR == 'TR5_064' else {
+            'TR2_128': mean_SNR_abs * np.sqrt(128/64)*(T1w(2,reference_T1)/T1w(8,reference_T1))/TR2_time,
+            'TR5_064': mean_SNR_abs * np.sqrt(64/64)*(T1w(5,reference_T1)/T1w(8,reference_T1))/TR5_time,
+            'TR8_064': mean_SNR_abs * np.sqrt(64/64)*(T1w(8,reference_T1)/T1w(8,reference_T1))/TR8_time
+        }
+
+    
 
     # Plot the data
     fig, ax = plt.subplots(figsize=(20, 12))
-    sns.stripplot(data=SNR_per_time_df, x='Category', y='Value', jitter=False, alpha=0.7, s=25, color='#0c2343', ax=ax)
+    sns.stripplot(data=SNR_per_time_df, x='Category', y='Value', jitter=False, alpha=0.5, s=25, color='k', ax=ax)
     sns.boxplot(showmeans=True,
                 meanline=True,
-                meanprops={'color': 'k', 'ls': '-', 'lw': 6},
+                meanprops={'color': 'k', 'ls': '-', 'lw': 4},
                 medianprops={'visible': False},
                 whiskerprops={'visible': False},
                 zorder=10,
@@ -421,12 +707,16 @@ def page_snr_per_time():
     for i, (_, line_value) in enumerate(line_values.items()):
         ax.plot([i-0.4, i+0.4], [line_value, line_value], color='r', linestyle='--', linewidth=6, zorder=11)
 
+    for i, (_, line_value) in enumerate(line_values_T1.items()):
+        ax.plot([i-0.4, i+0.4], [line_value, line_value], color='#2F9EFF', linestyle=(0, (1, 1)), linewidth=6, zorder=11)
+
     # Create a custom legend
     from matplotlib.lines import Line2D
-    legend_elements = [Line2D([0], [0], marker='o', color='w', label='Volunteers',
-                            markerfacecolor='#0c2343', markersize=25, alpha=0.7),
+    legend_elements = [Line2D([0], [0], marker='o', color='w', label='Measured Data',
+                            markerfacecolor='k', markersize=25, alpha=0.5),
                     Line2D([0], [0], color='k', lw=6, label='Average'),
-                    Line2D([0], [0], color='r', lw=6, linestyle='--', label='Calculated')]
+                    Line2D([0], [0], color='#FF0000', lw=6, linestyle='--', label='Expected without T$_1$w'),
+                    Line2D([0], [0], color='#2F9EFF', lw=6, linestyle=(0, (1, 1)), label=f"Expected with T$_1$= {reference_T1} s")]
     ax.legend(handles=legend_elements, fontsize=20)
     
     # Set x-axis labels to be 2, 5, and 8
@@ -1219,7 +1509,10 @@ def page_T1_fit():
     st.markdown("""Here, we dive into extracting T$_1$ fit values from concentration values for different metabolites.""")
     st.markdown("""- The first section allows you to display the fits for a specific metabolite and calculates the average and standard deviation T$_1$ values.""")
     st.markdown("""- Fits were done on individual volunteer data sets. The fit parameters were averaged across volunteers, and the standard deviation is used as the uncertainty.""")
-    st.markdown("""- The fit equation used is the classic saturation recovery equation: M$_0$*(1 - exp(-TR/T$_1$))""")
+    st.markdown("""- The fit equation used is the classic saturation recovery equation:""")
+    st.latex(r'''
+             M_z(\textup{TR})=M_0\left[1-\exp\left(-\frac{\textup{TR}}{T_1}\right) \right]
+    ''')
     st.markdown("""- The second section displays the average T$_1$ value and associated standard deviation for multiple metabolites.""")
 
 
@@ -1240,7 +1533,7 @@ def page_T1_fit():
     params_initial_guess = [10, 1.2]
 
     # Get a list of all metabolites
-    all_metabolites = datasets['V1']['TR2_064'].iloc[:, 0].tolist()
+    all_metabolites = datasets_T1['V1']['TR2_128'].iloc[:, 0].tolist()
 
     # List of metabolites to exclude
     exclude_metabolites = ['Ala', 'Glc', 'Glyc', 'MM12', 'MM14', 'MM16', 'MM21', 'MM39', 'NAAG', 'bHB', 'MM09', 'MM30', 'Cr', 'PCr', 'GPC', 'PCh']
@@ -1271,7 +1564,7 @@ def page_T1_fit():
         # Combine the GPC and PCh values
         for metabolite_to_combine in metabolites_to_combine:
             # Select the row corresponding to the current metabolite
-            y_values = [datasets[v][tr]['mM'][datasets[v][tr].iloc[:, 0] == metabolite_to_combine].values[0] for tr in ['TR2_128', 'TR5_064', 'TR8_064']]
+            y_values = [datasets_T1[v][tr]['mM'][datasets_T1[v][tr].iloc[:, 0] == metabolite_to_combine].values[0] for tr in ['TR2_128', 'TR5_064', 'TR8_064']]
             combined_y_values = [sum(x) for x in zip(combined_y_values, y_values)]
 
         # Curve fit the concentration values for the selected metabolite across each volunteer
@@ -1309,7 +1602,7 @@ def page_T1_fit():
         combined_y_values = [0, 0, 0]
         for metabolite_to_combine in metabolites_to_combine:
             # Select the row corresponding to the current metabolite
-            y_values = [datasets[v][tr]['mM'][datasets[v][tr].iloc[:, 0] == metabolite_to_combine].values[0] for tr in ['TR2_128', 'TR5_064', 'TR8_064']]
+            y_values = [datasets_T1[v][tr]['mM'][datasets_T1[v][tr].iloc[:, 0] == metabolite_to_combine].values[0] for tr in ['TR2_128', 'TR5_064', 'TR8_064']]
             combined_y_values = [sum(x) for x in zip(combined_y_values, y_values)]
 
         p_opt, p_cov = curve_fit(sat_rec, TRs, combined_y_values, p0=params_initial_guess)
@@ -1351,7 +1644,7 @@ def page_T1_fit():
             combined_y_values = [0, 0, 0]
             for metabolite_to_combine in metabolites_to_combine:
                 # Select the row corresponding to the current metabolite
-                y_values = [datasets[v][tr]['mM'][datasets[v][tr].iloc[:, 0] == metabolite_to_combine].values[0] for tr in ['TR2_128', 'TR5_064', 'TR8_064']]
+                y_values = [datasets_T1[v][tr]['mM'][datasets_T1[v][tr].iloc[:, 0] == metabolite_to_combine].values[0] for tr in ['TR2_128', 'TR5_064', 'TR8_064']]
                 combined_y_values = [sum(x) for x in zip(combined_y_values, y_values)]
 
             p_opt, p_cov = curve_fit(sat_rec, TRs, combined_y_values, p0=params_initial_guess)

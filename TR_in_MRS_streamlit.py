@@ -371,7 +371,7 @@ def page_snr_per_time():
     st.latex(r'''
              M_z(\textup{TR})=M_0\left[1-\exp\left(-\frac{\textup{TR}}{T_1}\right) \right]
     ''')
-    st.markdown("""- For example, if we use the SNR for TR = 8 s and NSA = 32 as our reference (ref), and we want to determine the expected value for TR = 2 s, NSA = 128 (the target), then the expected SNR per minte for TR = 2 s, NSA = 128 would be:""")
+    st.markdown("""- For example, if we use the SNR for TR = 8 s and NSA = 32 as our reference (ref), and we want to determine the expected value for TR = 2 s, NSA = 128 (the target), then the expected SNR per minute for TR = 2 s, NSA = 128 would be:""")
     st.latex(r'''
              \textup{SNR}/\textup{minute}=\textup{SNR}_{(\textup{TR=8}\textup{, NSA=32})} 
              \times \sqrt{\frac{128}{32}}
